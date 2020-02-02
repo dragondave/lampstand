@@ -203,6 +203,7 @@ class Reaction(lampstand.reactions.base.Reaction):
             self.lastasked = key
             self.answered = row[1]
         else:
+            import lampstand.reactions.dict
             dictionary = lampstand.reactions.dict.Reaction(connection)
             try:
                 result, src = dictionary.getDefinition(key)

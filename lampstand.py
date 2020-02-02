@@ -6,14 +6,15 @@ I am Lampstand. Beware.
 
 """
 
-# twisted imports
-from twisted.words.protocols import irc
-from twisted.internet import reactor, protocol, threads, defer, endpoints
-from twisted.python import log
-from twisted.web import server, resource
+# twisted import
+
+#from twisted.words.protocols import irc
+#from twisted.internet import reactor, protocol, threads, defer, endpoints
+#from twisted.python import log
+#from twisted.web import server, resource
 
 from datetime import datetime
-from twisted.internet.task import LoopingCall
+#from twisted.internet.task import LoopingCall
 
 # system imports
 import time
@@ -32,7 +33,6 @@ random.seed()
 # Other Imports:
 
 import cymysql
-
 import lampstand.reactions
 
 import ConfigParser
@@ -43,7 +43,8 @@ from lampstand import sms
 import logging
 from logging.handlers import TimedRotatingFileHandler
 from logging.handlers import SysLogHandler
-
+from time import sleep
+import traceback
 class ContextFilter(logging.Filter):
   hostname = socket.gethostname()
 
@@ -197,7 +198,7 @@ class PrivateActions:
                     self.logger.info("Sending Sorry to %s" % user)
 
 
-class LampstandLoop(irc.IRCClient):
+class LampstandLoop(object):
 
     """An IRC Bot for #maelfroth."""
 
@@ -280,7 +281,7 @@ class LampstandLoop(irc.IRCClient):
         self.realname = "Lampstand L. Lampstand."
         self.userinfo = "I'm a bot! http://wiki.maelfroth.org/lampstandDocs"
 
-        irc.IRCClient.connectionMade(self)
+        # irc.IRCClient.connectionMade(self)
 
         self.channel = ChannelActions(self)
         self.private = PrivateActions(self)
@@ -301,8 +302,11 @@ class LampstandLoop(irc.IRCClient):
         self.logger.info("[connected at %s]" %
                          time.asctime(time.localtime(time.time())))
 
-        self.loopy = LoopingCall(self.scheduledTasks)
-        self.loopy.start(5)
+        #self.loopy = LoopingCall(self.scheduledTasks)
+        #self.loopy.start(5)
+        #while True:
+        #    self.scheduledTasks()
+        #    sleep(5)
 
     def installModule(self, moduleName):
 
@@ -464,7 +468,11 @@ class LampstandLoop(irc.IRCClient):
     def message(self, user, message, length=380):
         message = message.replace('\n', '').replace('\r', '')
         message = UnicodeDammit(message)
-        return self.msg(user, message.unicode.encode("utf-8"), length)
+        self.send_message(user, message.unicode.encode("utf-8"), length)
+
+    def send_message(self, user, msg, length):
+        # added by dragon as placeholder
+        print (user, msg, length)
 
     # irc callbacks
 
@@ -648,7 +656,7 @@ class LampstandLoop(irc.IRCClient):
 
         self.config = config
 
-class HypertextFactory(resource.Resource):
+class HypertextFactory(object):
     isLeaf = True
 
     def __init__(self, config, dbconnection):
@@ -667,7 +675,7 @@ class HypertextFactory(resource.Resource):
 
         return content.encode("ascii")
 
-class LampstandFactory(protocol.ClientFactory):
+class LampstandFactory(object):
 
     """We make Lampstands
 
@@ -683,15 +691,15 @@ class LampstandFactory(protocol.ClientFactory):
 
     def clientConnectionLost(self, connector, reason):
         """If we get disconnected, reconnect to server."""
-        sms.send('Lampstand: HAZ NO CONEXON')
+        print('Lampstand: HAZ NO CONEXON')
         # Todo: Implement backoff
         # time.sleep(45)  # Our very own fourty five second claim.
         # connector.connect()
-        reactor.stop()
+        exit()
 
     def clientConnectionFailed(self, connector, reason):
         self.logger.info("connection failed:", reason)
-        reactor.stop()
+        exit()
 
 
 if __name__ == '__main__':
@@ -717,6 +725,8 @@ if __name__ == '__main__':
         db=db,
         charset='utf8')
 
+    #dbconnection = sqlite3.connect("yoink.db")
+
     irc_host = config.get("connection", "server")
     irc_port = config.getint("connection", "port")
     www_port = config.getint("webserver", "port")
@@ -724,10 +734,26 @@ if __name__ == '__main__':
     # IRC Bot
     logging.info("Connecting to %s:%s" % (irc_host, irc_port))
     f = LampstandFactory(config, dbconnection)
-    reactor.connectTCP(irc_host, irc_port, f)
+
+    lamp = LampstandLoop()
+    lamp.factory = f 
+    lamp.connectionMade()
+    #print f.protocol(Lampstand)
+    #f.protocol.connectionMade()
+    #reactor.connectTCP(irc_host, irc_port, f)
 
     # Webserver 
-    endpoints.serverFromString(reactor, "tcp:{port}".format(port=www_port)).listen(server.Site(HypertextFactory(config, dbconnection)))
+    # endpoints.serverFromString(reactor, "tcp:{port}".format(port=www_port)).listen(server.Site(HypertextFactory(config, dbconnection)))
    
     # run bot, run
-    reactor.run()
+    # reactor.run()
+    print ("OK")
+    while True:
+        newline = raw_input()
+        try:
+            lamp.channel.action(user="y", channel="foo", message=newline)
+        except Exception as e:
+            traceback.print_exc()
+            print ("Yeah, that didn't work.")
+            print (type(e), e)
+
