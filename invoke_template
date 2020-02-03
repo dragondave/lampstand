@@ -1,0 +1,4 @@
+python -m disco.cli --token="DISCORD TOKEN" --run-bot --plugin discord_plugin
+
+
+

@@ -1,0 +1,6 @@
+# from FraelMoth
+
+glampstand
+glowstone [urizeni lampstand]
+stampland
+

@@ -701,7 +701,6 @@ class LampstandFactory(object):
         self.logger.info("connection failed:", reason)
         exit()
 
-
 if __name__ == '__main__':
     cwd = os.getcwd()
     logging.info("Error log is %s/stderr.log" % cwd)
@@ -747,11 +746,12 @@ if __name__ == '__main__':
    
     # run bot, run
     # reactor.run()
-    print ("OK")
+
+    print ("OK: manual mode engaged")
     while True:
         newline = raw_input()
         try:
-            lamp.channel.action(user="y", channel="foo", message=newline)
+            lamp.channel.action(user="x", channel="foo", message=newline)
         except Exception as e:
             traceback.print_exc()
             print ("Yeah, that didn't work.")
